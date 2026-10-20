@@ -17,15 +17,25 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Build APK
         working-directory: android
-        run: gradle assembleDebug
+        run: |
+          echo "Checking Android project files..."
+          ls -la
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+            gradle assembleDebug
+          else
+            echo "ERROR: No Gradle build file found in android/"
+            exit 1
+          fi
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: GoldSniper3R-APK
           path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
